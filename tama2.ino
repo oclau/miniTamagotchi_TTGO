@@ -24,18 +24,52 @@ bool isSick = false;
 int selected = 0; // 0-hunger, 1-sleep, 2-mood
 unsigned long lastJoyTime = 0;
 
+const unsigned char heartBitmap [] PROGMEM = {
+  0b00001100, 0b00110000,
+  0b00011110, 0b01111000,
+  0b00111111, 0b11111100,
+  0b01111111, 0b11111110,
+  0b01111111, 0b11111110,
+  0b01111111, 0b11111110,
+  0b00111111, 0b11111100,
+  0b00011111, 0b11111000,
+  0b00001111, 0b11110000,
+  0b00000111, 0b11100000,
+  0b00000011, 0b11000000,
+  0b00000001, 0b10000000,
+  0b00000000, 0b00000000,
+  0b00000000, 0b00000000,
+  0b00000000, 0b00000000,
+  0b00000000, 0b00000000
+};
+
+
+
+
+
+
 void drawCatFace() {
   tft.setTextSize(2);
   tft.setTextColor(ST77XX_CYAN);
   tft.setCursor(40, 10);  tft.println("  /\\_/\\  ");
   tft.setCursor(40, 30);  tft.println(" ( o.o ) ");
-  tft.setCursor(40, 50);  tft.println("  > ^ < ");
+  tft.setCursor(40, 50);  tft.println("  >   < ");
 }
 
 void drawStaticScreen() {
   tft.fillScreen(ST77XX_BLACK);
-  drawCatFace();
+  tft.setTextSize(2);
+  tft.setTextColor(ST77XX_CYAN);
 
+  // Główka i uszy
+  tft.setCursor(50, 10);  tft.println("  /\\_/\\  ");
+  tft.setCursor(50, 30);  tft.println(" ( o.o ) ");
+  tft.setCursor(50, 50);  tft.println("  >   < ");
+
+  // Serduszko między łapkami
+  tft.drawBitmap(95, 50, heartBitmap, 16, 16, ST77XX_MAGENTA);
+
+  // Opisy pasków
   tft.setTextSize(1);
   tft.setTextColor(ST77XX_YELLOW);
   tft.setCursor(10, 90);  tft.print("Hunger:");
@@ -112,6 +146,10 @@ void handleJoystick() {
     delay(300); // debounce
   }
 }
+
+
+
+
 
 void setup() {
   Serial.begin(9600);
