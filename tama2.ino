@@ -15,14 +15,15 @@
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
-// Stany
 int hunger = 70;
 int sleepiness = 40;
 int mood = 85;
 bool isSick = false;
+int selected = 0;
 
-int selected = 0; // 0-hunger, 1-sleep, 2-mood
 unsigned long lastJoyTime = 0;
+unsigned long reactionStart = 0;
+String reactionText = "";
 
 const unsigned char heartBitmap [] PROGMEM = {
   0b00001100, 0b00110000,
@@ -43,53 +44,29 @@ const unsigned char heartBitmap [] PROGMEM = {
   0b00000000, 0b00000000
 };
 
-
-
-
-
-
 void drawCatFace() {
   tft.setTextSize(2);
   tft.setTextColor(ST77XX_CYAN);
   tft.setCursor(40, 10);  tft.println("  /\\_/\\  ");
   tft.setCursor(40, 30);  tft.println(" ( o.o ) ");
-  tft.setCursor(40, 50);  tft.println("  >   < ");
+  tft.setCursor(40, 50);  tft.println(" ( > < ) ");
 }
 
 void drawStaticScreen() {
   tft.fillScreen(ST77XX_BLACK);
   tft.setTextSize(2);
   tft.setTextColor(ST77XX_CYAN);
-
-  // Główka i uszy
   tft.setCursor(50, 10);  tft.println("  /\\_/\\  ");
   tft.setCursor(50, 30);  tft.println(" ( o.o ) ");
-  tft.setCursor(50, 50);  tft.println("  >   < ");
+  tft.setCursor(50, 50);  tft.println(" ( > < ) ");
 
-  // Serduszko między łapkami
   tft.drawBitmap(95, 50, heartBitmap, 16, 16, ST77XX_MAGENTA);
 
-  // Opisy pasków
   tft.setTextSize(1);
   tft.setTextColor(ST77XX_YELLOW);
   tft.setCursor(10, 90);  tft.print("Hunger:");
   tft.setCursor(10, 105); tft.print("Sleep:");
   tft.setCursor(10, 120); tft.print("Mood:");
-}
-
-void updateBars() {
-  for (int i = 0; i < 3; i++) {
-    int val = (i == 0) ? hunger : (i == 1) ? sleepiness : mood;
-    int y = 90 + i * 15;
-
-    tft.fillRect(70, y, 80, 8, ST77XX_BLACK);
-    tft.fillRect(70, y, val * 0.6, 8, (i == 0) ? ST77XX_RED : (i == 1) ? ST77XX_BLUE : ST77XX_GREEN);
-    tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
-    tft.setCursor(160, y);
-    tft.printf("%3d%%", val);
-  }
-
-  drawSelector();
 }
 
 void drawSelector() {
@@ -101,16 +78,46 @@ void drawSelector() {
   }
 }
 
+void updateBars() {
+  for (int i = 0; i < 3; i++) {
+    int val = (i == 0) ? hunger : (i == 1) ? sleepiness : mood;
+    int y = 90 + i * 15;
+    tft.fillRect(70, y, 80, 8, ST77XX_BLACK);
+    tft.fillRect(70, y, val * 0.6, 8, (i == 0) ? ST77XX_RED : (i == 1) ? ST77XX_BLUE : ST77XX_GREEN);
+    tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    tft.setCursor(160, y);
+    tft.printf("%3d%%", val);
+  }
+  drawSelector();
+}
+
+void showReaction(const String& msg) {
+  reactionText = msg;
+  reactionStart = millis();
+  int y = 90 + selected * 15;
+  tft.setCursor(200, y);
+  tft.setTextColor(ST77XX_MAGENTA, ST77XX_BLACK);
+  tft.print(reactionText);
+}
+
+void clearReactionIfNeeded() {
+  if (reactionText != "" && millis() - reactionStart > 500) {
+    int y = 90 + selected * 15;
+    tft.fillRect(200, y, 40, 10, ST77XX_BLACK);
+    reactionText = "";
+  }
+}
+
 void showSickMessage() {
   tft.fillScreen(ST77XX_BLACK);
   tft.setCursor(20, 40);
   tft.setTextColor(ST77XX_RED);
   tft.setTextSize(2);
-  tft.println("Kot cierpi!");
+  tft.println("Kitty is sick :(");
   tft.setCursor(20, 80);
   tft.setTextColor(ST77XX_WHITE);
-  tft.setTextSize(1);
-  tft.println("Wcisnij guzik by uleczyc");
+  tft.setTextSize(1.8);
+  tft.println("Press button to heal");
 }
 
 void handleJoystick() {
@@ -138,24 +145,19 @@ void handleJoystick() {
       updateBars();
     } else {
       switch (selected) {
-        case 0: hunger = min(100, hunger + 10); break;
-        case 1: sleepiness = max(0, sleepiness - 10); break;
-        case 2: mood = min(100, mood + 10); break;
+        case 0: hunger = min(100, hunger + 10); showReaction("Mniam!"); break;
+        case 1: sleepiness = max(0, sleepiness - 10); showReaction("Zzz..."); break;
+        case 2: mood = min(100, mood + 10); showReaction("Hihi!"); break;
       }
     }
-    delay(300); // debounce
+    delay(300);
   }
 }
-
-
-
-
 
 void setup() {
   Serial.begin(9600);
   pinMode(TFT_BL, OUTPUT);
   digitalWrite(TFT_BL, HIGH);
-
   pinMode(JOY_SW, INPUT_PULLUP);
 
   tft.init(135, 240);
@@ -166,6 +168,7 @@ void setup() {
 
 void loop() {
   handleJoystick();
+  clearReactionIfNeeded();
 
   static unsigned long lastUpdate = 0;
   if (millis() - lastUpdate > 5000 && !isSick) {
