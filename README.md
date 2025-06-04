@@ -43,7 +43,6 @@ Projekt symuluje prostego wirtualnego zwierzaka - kotka zrobionego ze znaków, k
 | JOY_SW     | GPIO 33       |
 
 
-
 ## Użycie
 1. Wgrać kod na płytkę TTGO T-Display
 2. Ekran wyświetli kotka oraz paski stanu, które wraz z upływem czasu będą się zmieniać
@@ -56,6 +55,15 @@ Projekt symuluje prostego wirtualnego zwierzaka - kotka zrobionego ze znaków, k
 - mini-gry (np. złap jedzenie, odbij piłeczkę, skoki itp.)
 - połączenie się z innymi "graczami"
 - animacje (może być problem z danym wyświetlaczem, dlatego możliwy upgrade sprzętowy)
+
+
+## Zdjęcia
+![pokazany stan po kliknięciu danego paska - hunger](hunger.jpg)
+![pokazany stan po kliknięciu danego paska - sleep](sleep.jpg)
+![pokazany stan po kliknięciu danego paska - mood](mood.jpg)
+![stan krytyczny](sick.jpg)
+![joystick](joystick.jpg)
+
 
 Projekt stworzony przez oclau – 2025, 
 na potrzeby zaliczenia projektu z przedmiotu na studiach.
